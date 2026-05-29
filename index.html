@@ -42,14 +42,18 @@
   .copy-btn.done { background: #16a34a; color: #fff; }
   .empty { text-align: center; color: #9ca3af; font-size: 14px; padding: 20px 0; }
 
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 16px; }
   .overlay.show { display: flex; }
-  .modal { background: #fff; border-radius: 20px; padding: 22px; width: 100%; max-width: 360px; }
+  .modal { background: #fff; border-radius: 20px; padding: 20px; width: 100%; max-width: 380px; max-height: 92vh; overflow: auto; }
   .modal h2 { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
-  .modal p { font-size: 12.5px; color: #6b7280; margin-bottom: 14px; }
-  .modal input { width: 100%; border: 1px solid #d8dce2; border-radius: 11px; padding: 12px 13px; font-size: 14px; }
-  .modal input:focus { outline: none; border-color: #16a34a; }
-  .m-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .modal p { font-size: 12.5px; color: #6b7280; margin-bottom: 12px; }
+  .addr-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .addr-row input { flex: 1; min-width: 0; border: 1px solid #d8dce2; border-radius: 11px; padding: 11px 12px; font-size: 14px; }
+  .addr-row input:focus { outline: none; border-color: #16a34a; }
+  .addr-row button { border: none; background: #eef2f5; color: #374151; font-weight: 700; font-size: 13px; padding: 0 15px; border-radius: 11px; cursor: pointer; white-space: nowrap; }
+  #set-map { width: 100%; height: 220px; border-radius: 12px; background: #e7eaee; z-index: 0; }
+  .picked { font-size: 12.5px; color: #16a34a; font-weight: 700; margin: 9px 2px 2px; min-height: 17px; }
+  .m-actions { display: flex; gap: 8px; margin-top: 12px; }
   .m-actions button { flex: 1; border: none; border-radius: 11px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
   .save { background: #16a34a; color: #fff; }
   .gps { background: #eef2ff; color: #4f46e5; }
@@ -71,10 +75,10 @@
   <div class="filter">
     <span class="lbl">거리</span>
     <button data-km="0" class="active">전체</button>
-    <button data-km="30">30km</button>
-    <button data-km="50">50km</button>
-    <button data-km="100">100km</button>
-    <button data-km="200">200km</button>
+    <button data-km="70">70km</button>
+    <button data-km="90">90km</button>
+    <button data-km="110">110km</button>
+    <button data-km="130">130km</button>
   </div>
 
   <div id="map"></div>
@@ -86,11 +90,16 @@
 <div class="overlay" id="overlay">
   <div class="modal">
     <h2>출발지 설정</h2>
-    <p>주소를 입력하고 저장하세요. 한 번 저장하면 다음에 열어도 유지돼요.</p>
-    <input id="addr" type="text" placeholder="예: 인천 연수구 송도동" />
+    <p>지도를 <b>탭</b>해서 우리집 위치를 찍으세요. (지역 검색·현재 위치로 이동 후 탭하면 편해요)</p>
+    <div class="addr-row">
+      <input id="addr" type="text" placeholder="지역 검색 (예: 인천 송도동)" />
+      <button id="addr-go">이동</button>
+    </div>
+    <div id="set-map"></div>
+    <div class="picked" id="picked">지도를 탭해 위치를 선택하세요</div>
     <div class="m-actions">
       <button class="gps" id="use-gps">📍 현재 위치</button>
-      <button class="save" id="save-addr">저장</button>
+      <button class="save" id="save-home">저장</button>
     </div>
     <button class="m-close" id="close-set">닫기</button>
   </div>
@@ -182,52 +191,90 @@
   ];
 
   let home = null, maxKm = 0, map, courseLayer, homeMarker;
+  let setMap, setMarker, picked = null, pickedLabel = null;
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function tile() { return L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', { maxZoom: 19, subdomains: 'abcd', attribution: '© OpenStreetMap © CARTO' }); }
 
   try { const saved = localStorage.getItem('golf_home'); if (saved) home = JSON.parse(saved); } catch (e) {}
 
-  // 지도 초기화
+  // 결과 지도
   map = L.map('map').setView([36.5, 127.8], 7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+  tile().addTo(map);
   courseLayer = L.layerGroup().addTo(map);
   setTimeout(() => map.invalidateSize(), 300);
 
-  // 설정 모달
+  // 설정 모달 열기/닫기
   $('open-set').addEventListener('click', openSettings);
   $('close-set').addEventListener('click', () => $('overlay').classList.remove('show'));
   $('overlay').addEventListener('click', e => { if (e.target === $('overlay')) $('overlay').classList.remove('show'); });
+
   function openSettings() {
-    if (home && home.addr) $('addr').value = home.addr;
     $('overlay').classList.add('show');
-    setTimeout(() => $('addr').focus(), 100);
+    if (!setMap) {
+      setMap = L.map('set-map').setView(home ? [home.lat, home.lng] : [36.5, 127.8], home ? 12 : 7);
+      tile().addTo(setMap);
+      setMap.on('click', e => pick(e.latlng.lat, e.latlng.lng, null));
+    }
+    setTimeout(() => setMap.invalidateSize(), 150);
+    if (home) { pick(home.lat, home.lng, home.addr); setMap.setView([home.lat, home.lng], 12); }
+    else { picked = null; pickedLabel = null; if (setMarker) { setMap.removeLayer(setMarker); setMarker = null; } updatePicked(); }
+  }
+  function pick(lat, lng, label) {
+    picked = { lat, lng }; pickedLabel = label;
+    if (setMarker) setMarker.setLatLng([lat, lng]); else setMarker = L.marker([lat, lng]).addTo(setMap);
+    updatePicked();
+  }
+  function updatePicked() {
+    $('picked').textContent = picked
+      ? ('✅ 선택: ' + (pickedLabel || (picked.lat.toFixed(4) + ', ' + picked.lng.toFixed(4))))
+      : '지도를 탭해 위치를 선택하세요';
   }
 
-  $('save-addr').addEventListener('click', saveAddr);
-  $('addr').addEventListener('keydown', e => { if (e.key === 'Enter') saveAddr(); });
-  async function saveAddr() {
-    const q = $('addr').value.trim();
-    if (!q) { alert('주소를 입력해 주세요.'); return; }
-    const btn = $('save-addr'); btn.textContent = '검색중';
+  // 지역 검색 → 지도 이동
+  $('addr-go').addEventListener('click', moveToAddr);
+  $('addr').addEventListener('keydown', e => { if (e.key === 'Enter') moveToAddr(); });
+  async function moveToAddr() {
+    const q = $('addr').value.trim(); if (!q) return;
+    const btn = $('addr-go'); btn.textContent = '…';
     try {
       const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=kr&accept-language=ko&q=' + encodeURIComponent(q);
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      const data = await res.json();
-      if (!data.length) { alert('주소를 찾지 못했어요. 더 간단히(시/구/동)로 입력해 보세요.'); btn.textContent = '저장'; return; }
-      setHome(parseFloat(data[0].lat), parseFloat(data[0].lon), q);
-      $('overlay').classList.remove('show');
-    } catch (e) { alert('주소 검색에 실패했어요. 잠시 후 다시 시도해 주세요.'); }
-    btn.textContent = '저장';
+      const r = await fetch(url); const d = await r.json();
+      if (!d.length) alert('지역을 못 찾았어요. 동/구 단위로 입력하거나 지도를 직접 탭해 주세요.');
+      else { const lat = parseFloat(d[0].lat), lng = parseFloat(d[0].lon); setMap.setView([lat, lng], 13); pick(lat, lng, q); }
+    } catch (e) { alert('검색 실패. 지도를 탭해 주세요.'); }
+    btn.textContent = '이동';
   }
 
+  // 현재 위치
   $('use-gps').addEventListener('click', () => {
     if (!navigator.geolocation) { alert('위치 기능을 사용할 수 없어요.'); return; }
     $('use-gps').textContent = '확인중';
     navigator.geolocation.getCurrentPosition(
-      p => { setHome(p.coords.latitude, p.coords.longitude, '현재 위치'); $('overlay').classList.remove('show'); $('use-gps').textContent = '📍 현재 위치'; },
-      () => { alert('위치를 가져오지 못했어요. 주소를 입력해 주세요.'); $('use-gps').textContent = '📍 현재 위치'; }
+      p => { const lat = p.coords.latitude, lng = p.coords.longitude; setMap.setView([lat, lng], 14); pick(lat, lng, '현재 위치'); $('use-gps').textContent = '📍 현재 위치'; },
+      () => { alert('위치를 가져오지 못했어요. 지도를 탭해 주세요.'); $('use-gps').textContent = '📍 현재 위치'; }
     );
   });
+
+  // 저장
+  $('save-home').addEventListener('click', saveHome);
+  async function saveHome() {
+    if (!picked) { alert('먼저 지도를 탭해 위치를 선택하세요.'); return; }
+    const btn = $('save-home'); btn.textContent = '저장중';
+    let label = pickedLabel;
+    if (!label) label = await reverseGeo(picked.lat, picked.lng);
+    setHome(picked.lat, picked.lng, label || (picked.lat.toFixed(4) + ', ' + picked.lng.toFixed(4)));
+    btn.textContent = '저장';
+    $('overlay').classList.remove('show');
+  }
+  async function reverseGeo(lat, lng) {
+    try {
+      const url = 'https://nominatim.openstreetmap.org/reverse?format=json&accept-language=ko&lat=' + lat + '&lon=' + lng;
+      const r = await fetch(url); const d = await r.json(); const a = d.address || {};
+      const parts = [a.province || a.state, a.city || a.county || a.town, a.borough || a.city_district || a.suburb || a.village, a.neighbourhood || a.quarter, a.road].filter(Boolean);
+      return [...new Set(parts)].join(' ') || null;
+    } catch (e) { return null; }
+  }
 
   function setHome(lat, lng, addr) {
     home = { lat, lng, addr };
@@ -235,6 +282,7 @@
     render();
   }
 
+  // 거리 필터
   document.querySelectorAll('.filter button').forEach(b => {
     b.addEventListener('click', () => {
       document.querySelectorAll('.filter button').forEach(x => x.classList.remove('active'));
@@ -250,14 +298,12 @@
     const s = Math.sin(dLat/2)**2 + Math.cos(toR(aLat)) * Math.cos(toR(bLat)) * Math.sin(dLng/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
   }
-
   function naverUrl(c) {
     return 'https://m.map.naver.com/route.nhn?menu=route&sname=' + encodeURIComponent('출발지')
       + '&sx=' + home.lng + '&sy=' + home.lat + '&ename=' + encodeURIComponent(c.n)
       + '&ex=' + c.x + '&ey=' + c.y + '&pathType=1&showMap=true';
   }
 
-  // 지도에 핀 표시
   function updateMap(items) {
     courseLayer.clearLayers();
     const pts = [];
@@ -266,8 +312,7 @@
         + (c.d != null ? '<br>📏 ' + (c.d < 1 ? Math.round(c.d*1000)+' m' : c.d.toFixed(1)+' km') : '')
         + '<br>' + esc(c.a)
         + (home ? '<br><a href="' + naverUrl(c) + '" target="_blank">네이버 길찾기 →</a>' : '');
-      L.circleMarker([c.y, c.x], { radius: 6, color: '#fff', weight: 2, fillColor: '#16a34a', fillOpacity: 1 })
-        .bindPopup(popup).addTo(courseLayer);
+      L.circleMarker([c.y, c.x], { radius: 6, color: '#fff', weight: 2, fillColor: '#16a34a', fillOpacity: 1 }).bindPopup(popup).addTo(courseLayer);
       pts.push([c.y, c.x]);
     });
     if (home) {
@@ -282,7 +327,7 @@
     const list = $('list'), count = $('count'), origin = $('origin');
     if (!home) {
       origin.style.display = 'none';
-      list.innerHTML = '<div class="empty">⚙️ 출발지 설정에서 주소를 입력하면 가까운 순으로 정렬돼요</div>';
+      list.innerHTML = '<div class="empty">⚙️ 출발지 설정에서 위치를 지정하면 가까운 순으로 정렬돼요</div>';
       count.textContent = '전국 골프장 ' + COURSES.length + '곳';
       updateMap(COURSES);
       return;
