@@ -27,6 +27,9 @@
   #map { width: 100%; height: 300px; border-radius: 16px; margin-bottom: 12px; z-index: 0; background: #e7eaee; border: 1px solid #eef0f2; }
   .leaflet-popup-content { font-size: 13px; line-height: 1.5; }
   .leaflet-popup-content a { color: #03c75a; font-weight: 700; text-decoration: none; }
+  .golf-pin, .home-pin { background: transparent; border: none; }
+  .golf-pin div { width: 28px; height: 28px; background: #fff; border: 2px solid #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.28); }
+  .home-pin div { width: 30px; height: 30px; background: #4f46e5; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.35); }
 
   .count { font-size: 12px; color: #9ca3af; margin: 2px 2px 8px; }
 
@@ -203,6 +206,8 @@
   tile().addTo(map);
   courseLayer = L.layerGroup().addTo(map);
   setTimeout(() => map.invalidateSize(), 300);
+  const golfIcon = L.divIcon({ className: 'golf-pin', html: '<div>⛳</div>', iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] });
+  const homeIcon = L.divIcon({ className: 'home-pin', html: '<div>🏠</div>', iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -16] });
 
   // 설정 모달 열기/닫기
   $('open-set').addEventListener('click', openSettings);
@@ -312,12 +317,12 @@
         + (c.d != null ? '<br>📏 ' + (c.d < 1 ? Math.round(c.d*1000)+' m' : c.d.toFixed(1)+' km') : '')
         + '<br>' + esc(c.a)
         + (home ? '<br><a href="' + naverUrl(c) + '" target="_blank">네이버 길찾기 →</a>' : '');
-      L.circleMarker([c.y, c.x], { radius: 6, color: '#fff', weight: 2, fillColor: '#16a34a', fillOpacity: 1 }).bindPopup(popup).addTo(courseLayer);
+      L.marker([c.y, c.x], { icon: golfIcon }).bindPopup(popup).addTo(courseLayer);
       pts.push([c.y, c.x]);
     });
     if (home) {
       if (homeMarker) homeMarker.setLatLng([home.lat, home.lng]);
-      else homeMarker = L.circleMarker([home.lat, home.lng], { radius: 8, color: '#fff', weight: 3, fillColor: '#4f46e5', fillOpacity: 1 }).addTo(map).bindPopup('🏠 출발지');
+      else homeMarker = L.marker([home.lat, home.lng], { icon: homeIcon }).addTo(map).bindPopup('🏠 출발지');
       pts.push([home.lat, home.lng]);
     }
     if (pts.length) { try { map.fitBounds(L.latLngBounds(pts).pad(0.2)); } catch (e) {} }
