@@ -7,54 +7,65 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, "Samsung Sans", "Roboto", "Segoe UI", sans-serif;
-    background: #f4f5f7; color: #1a1a1a;
-  }
+  body { font-family: -apple-system, "Samsung Sans", "Roboto", "Segoe UI", sans-serif; background: #f4f5f7; color: #1a1a1a; }
   #app { max-width: 480px; margin: 0 auto; padding: 14px; }
-  h1 { font-size: 20px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.4px; }
 
-  .card { background: #fff; border-radius: 18px; padding: 14px; margin-bottom: 12px;
-          box-shadow: 0 3px 14px rgba(0,0,0,0.06); border: 1px solid #eef0f2; }
-  .hint { font-size: 13px; color: #6b7280; margin-bottom: 10px; }
-  #map { width: 100%; height: 240px; border-radius: 12px; z-index: 0; background: #e7eaee; }
-  .home-info { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 8px; }
-  #home-label { font-size: 13px; color: #374151; font-weight: 600; flex: 1; }
-  .gps-btn { border: none; background: #eef2ff; color: #4f46e5; font-weight: 700;
-             font-size: 13px; padding: 8px 12px; border-radius: 10px; cursor: pointer; white-space: nowrap; }
-  .gps-btn:active { background: #e0e7ff; }
+  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
+  .set-btn { border: none; background: #eef2ff; color: #4f46e5; font-weight: 700; font-size: 13px; padding: 9px 13px; border-radius: 10px; cursor: pointer; }
+  .set-btn:active { background: #e0e7ff; }
+
+  .origin { background: #fff; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; border: 1px solid #eef0f2; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-size: 13.5px; }
+  .origin .lab { color: #9ca3af; font-size: 12px; margin-bottom: 3px; }
+  .origin .val { font-weight: 700; color: #111827; }
 
   .filter { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
   .filter .lbl { font-size: 13px; color: #6b7280; margin-right: 2px; }
-  .filter button { border: 1px solid #e2e5ea; background: #fff; color: #374151;
-                   font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-weight: 600; }
+  .filter button { border: 1px solid #e2e5ea; background: #fff; color: #374151; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-weight: 600; }
   .filter button.active { background: #16a34a; color: #fff; border-color: #16a34a; }
+
+  #map { width: 100%; height: 300px; border-radius: 16px; margin-bottom: 12px; z-index: 0; background: #e7eaee; border: 1px solid #eef0f2; }
+  .leaflet-popup-content { font-size: 13px; line-height: 1.5; }
+  .leaflet-popup-content a { color: #03c75a; font-weight: 700; text-decoration: none; }
 
   .count { font-size: 12px; color: #9ca3af; margin: 2px 2px 8px; }
 
-  .course { background: #fff; border-radius: 14px; padding: 13px 14px; margin-bottom: 8px;
-            display: flex; align-items: center; justify-content: space-between; gap: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #eef0f2; }
-  .c-left { min-width: 0; }
+  .course { background: #fff; border-radius: 14px; padding: 13px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #eef0f2; }
+  .c-left { min-width: 0; flex: 1; }
   .c-name { font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .c-dist { font-size: 13px; color: #16a34a; font-weight: 800; margin-top: 3px; }
-  .nav-btn { border: none; background: #03c75a; color: #fff; font-weight: 700; font-size: 12.5px;
-             padding: 9px 12px; border-radius: 10px; cursor: pointer; white-space: nowrap; text-decoration: none; }
+  .c-addr { font-size: 11.5px; color: #9ca3af; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-btns { display: flex; flex-direction: column; gap: 6px; }
+  .nav-btn { border: none; background: #03c75a; color: #fff; font-weight: 700; font-size: 12px; padding: 8px 10px; border-radius: 9px; text-decoration: none; text-align: center; white-space: nowrap; }
   .nav-btn:active { background: #02b350; }
-  .empty { text-align: center; color: #9ca3af; font-size: 14px; padding: 30px 0; }
+  .copy-btn { border: none; background: #eef2f5; color: #374151; font-weight: 700; font-size: 12px; padding: 8px 10px; border-radius: 9px; cursor: pointer; white-space: nowrap; }
+  .copy-btn.done { background: #16a34a; color: #fff; }
+  .empty { text-align: center; color: #9ca3af; font-size: 14px; padding: 20px 0; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 20px; padding: 22px; width: 100%; max-width: 360px; }
+  .modal h2 { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+  .modal p { font-size: 12.5px; color: #6b7280; margin-bottom: 14px; }
+  .modal input { width: 100%; border: 1px solid #d8dce2; border-radius: 11px; padding: 12px 13px; font-size: 14px; }
+  .modal input:focus { outline: none; border-color: #16a34a; }
+  .m-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .m-actions button { flex: 1; border: none; border-radius: 11px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .save { background: #16a34a; color: #fff; }
+  .gps { background: #eef2ff; color: #4f46e5; }
+  .m-close { width: 100%; margin-top: 8px; border: none; background: transparent; color: #9ca3af; font-size: 13px; padding: 6px; cursor: pointer; }
 </style>
 </head>
 <body>
 <div id="app">
-  <h1>⛳ 골프장 거리 계산기</h1>
+  <div class="head">
+    <h1>⛳ 골프장 거리</h1>
+    <button class="set-btn" id="open-set">⚙️ 출발지 설정</button>
+  </div>
 
-  <div class="card">
-    <div class="hint">지도를 탭해서 <b>우리집</b> 위치를 지정하세요</div>
-    <div id="map"></div>
-    <div class="home-info">
-      <span id="home-label">집 위치: 미설정</span>
-      <button class="gps-btn" id="gps">📍 현재 위치로</button>
-    </div>
+  <div class="origin" id="origin" style="display:none;">
+    <div class="lab">출발지</div>
+    <div class="val" id="origin-val">—</div>
   </div>
 
   <div class="filter">
@@ -66,132 +77,164 @@
     <button data-km="200">200km</button>
   </div>
 
+  <div id="map"></div>
+
   <div class="count" id="count"></div>
   <div id="list"></div>
 </div>
 
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>출발지 설정</h2>
+    <p>주소를 입력하고 저장하세요. 한 번 저장하면 다음에 열어도 유지돼요.</p>
+    <input id="addr" type="text" placeholder="예: 인천 연수구 송도동" />
+    <div class="m-actions">
+      <button class="gps" id="use-gps">📍 현재 위치</button>
+      <button class="save" id="save-addr">저장</button>
+    </div>
+    <button class="m-close" id="close-set">닫기</button>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
-  // [n]ame, [y]lat, [x]lng
+  // n:이름, y:위도, x:경도, a:주소
   const COURSES = [
-    {n:"뉴스프링빌CC (이천)",y:37.1539062,x:127.4199979},
-    {n:"비에이비스타CC (이천)",y:37.1803652,x:127.4166682},
-    {n:"마이다스 레이크 이천",y:37.1771186,x:127.5244816},
-    {n:"웰링턴CC (이천)",y:37.1687464,x:127.4205856},
-    {n:"사우스스프링스CC (이천)",y:37.1757456,x:127.4511098},
-    {n:"이천실크밸리GC",y:37.0805884,x:127.5728539},
-    {n:"크로스비GC 호법 (이천)",y:37.2367185,x:127.4118461},
-    {n:"H1클럽 (이천)",y:37.1882147,x:127.4033083},
-    {n:"동승골프앤리조트 (이천)",y:37.1564948,x:127.4151441},
-    {n:"블랙스톤리조트 (이천)",y:37.1614735,x:127.6179241},
-    {n:"포천힐스CC",y:37.8832535,x:127.2443041},
-    {n:"힐마루 골프&리조트 (포천)",y:37.9911367,x:127.2254287},
-    {n:"푸른솔GC (포천)",y:37.8416698,x:127.2346433},
-    {n:"베어크리크 (포천)",y:37.904002,x:127.280471},
-    {n:"선힐GC (가평)",y:37.8771921,x:127.3515465},
-    {n:"가평베네스트GC",y:37.7971975,x:127.3057765},
-    {n:"포천아도니스CC",y:37.9650326,x:127.1652588},
-    {n:"라싸골프클럽 (포천)",y:37.9975199,x:127.3805895},
-    {n:"베어크리크 (춘천)",y:37.769097,x:127.7195032},
-    {n:"오너스골프클럽 (춘천)",y:37.7718173,x:127.6562191},
-    {n:"라데나GC (춘천)",y:37.8411301,x:127.7186555},
-    {n:"남춘천CC",y:37.7892504,x:127.690912},
-    {n:"로드힐스 골프&리조트 (춘천)",y:37.7407348,x:127.7278116},
-    {n:"라비에벨CC 올드 (춘천)",y:37.7413124,x:127.7569522},
-    {n:"더플레이어스GC (춘천)",y:37.7775897,x:127.7507917},
-    {n:"제이드팰리스GC (춘천)",y:37.8309146,x:127.548482},
-    {n:"레이크사이드CC (용인)",y:37.3195517,x:127.179116},
-    {n:"한국CC (용인)",y:37.2192388,x:127.1513372},
-    {n:"지산CC (용인)",y:37.216084,x:127.336528},
-    {n:"88CC (용인)",y:37.3027597,x:127.1667733},
-    {n:"루트52CC (여주)",y:37.3502669,x:127.7200968},
-    {n:"이스트밸리CC (광주)",y:37.4055238,x:127.3846454},
-    {n:"곤지암CC (광주)",y:37.3332748,x:127.2954297},
-    {n:"한양CC (고양)",y:37.6561073,x:126.8555026},
-    {n:"송추CC (양주)",y:37.7949486,x:126.9119494},
-    {n:"드림파크CC (인천)",y:37.5728256,x:126.6436309},
-    {n:"인천그랜드CC",y:37.5137214,x:126.6412277},
-    {n:"베어즈베스트GC (인천)",y:37.5444444,x:126.6344444},
-    {n:"인천국제CC",y:37.5618629,x:126.6535847},
-    {n:"김포 씨사이드CC",y:37.706053,x:126.5338708},
-    {n:"세븐밸리CC (칠곡)",y:36.0170548,x:128.4645369},
-    {n:"오션힐스 청도GC",y:35.6767407,x:128.812208},
-    {n:"한맥CC (예천)",y:36.6581604,x:128.5211564},
-    {n:"노블레스CC (칠곡)",y:36.0474546,x:128.2992255},
-    {n:"감포GC (경주)",y:35.773242,x:129.4862531},
-    {n:"힐스카이CC (경주)",y:35.9105988,x:129.3142853},
-    {n:"그레이스CC (청도)",y:35.6642156,x:128.6450013},
-    {n:"경주신라CC",y:35.85084,x:129.2850197},
-    {n:"골프존카운티 청통 (영천)",y:35.9877158,x:128.8111278},
-    {n:"문경GC",y:36.715215,x:128.161935},
-    {n:"힐CC (창녕)",y:35.5005738,x:128.4999053},
-    {n:"아라미르 골프리조트 (창원)",y:35.0886554,x:128.7442248},
-    {n:"가야CC (김해)",y:35.273929,x:128.898378},
-    {n:"골프존카운티 경남 (함안)",y:35.3088429,x:128.5740993},
-    {n:"사우스케이프 (남해)",y:34.8374583,x:128.0717862},
-    {n:"동훈힐마루CC (창녕)",y:35.4944787,x:128.4968256},
-    {n:"타니CC (사천)",y:35.0994819,x:128.0159733},
-    {n:"동원로얄CC (통영)",y:34.8101147,x:128.4276676},
-    {n:"정산CC (김해)",y:35.253462,x:128.8078381},
-    {n:"노벨CC (고성)",y:35.0698317,x:128.4054959},
-    {n:"사우스링스 영암",y:34.7356893,x:126.4283883},
-    {n:"웨스트오션CC (영광)",y:35.355362,x:126.41153},
-    {n:"석정힐CC (고창)",y:35.4267144,x:126.7389465},
-    {n:"해남 파인비치CC",y:34.6975595,x:126.2612057},
-    {n:"다산베아채 (강진)",y:34.5454996,x:126.758866},
-    {n:"파인힐스 (순천)",y:35.0341366,x:127.2721794},
-    {n:"고창CC",y:35.515967,x:126.5023076},
-    {n:"광주CC (곡성)",y:35.3101401,x:127.1699263},
-    {n:"더나인GC (김제)",y:35.7954234,x:127.0344679},
-    {n:"에콜리안 영광CC",y:35.2948605,x:126.5013815},
-    {n:"나인브릿지 (제주)",y:33.3418079,x:126.4054915},
-    {n:"엘리시안 제주CC",y:33.3723833,x:126.3811418},
-    {n:"롯데 스카이힐 제주CC",y:33.2871149,x:126.4052324},
-    {n:"제주 블랙스톤CC",y:33.3364519,x:126.3110848},
-    {n:"에코랜드GC (제주)",y:33.4565209,x:126.6670479},
-    {n:"해비치CC (제주)",y:33.3603865,x:126.7256185},
-    {n:"타뮤즈 골프빌리지 (제주)",y:33.3689588,x:126.3505941},
-    {n:"테디밸리 골프&리조트 (제주)",y:33.2917697,x:126.3482597},
-    {n:"핀크스GC (제주)",y:33.3053535,x:126.3937346}
+    {n:"뉴스프링빌CC (이천)",y:37.1539062,x:127.4199979,a:"경기 이천시 사실로527번길 158"},
+    {n:"비에이비스타CC (이천)",y:37.1803652,x:127.4166682,a:"경기 이천시 모가면 어농로 272"},
+    {n:"마이다스 레이크 이천",y:37.1771186,x:127.5244816,a:"경기 이천시 설성면 설가로 602"},
+    {n:"웰링턴CC (이천)",y:37.1687464,x:127.4205856,a:"경기 이천시 모가면 사실로725번길 119-73"},
+    {n:"사우스스프링스CC (이천)",y:37.1757456,x:127.4511098,a:"경기 이천시 모가면 공원로 64"},
+    {n:"이천실크밸리GC",y:37.0805884,x:127.5728539,a:"경기 이천시 율면 이모산로 296"},
+    {n:"크로스비GC 호법 (이천)",y:37.2367185,x:127.4118461,a:"경기 이천시 호법면 중부대로798번길 177"},
+    {n:"H1클럽 (이천)",y:37.1882147,x:127.4033083,a:"경기 이천시 호법면 장자터로 115"},
+    {n:"동승골프앤리조트 (이천)",y:37.1564948,x:127.4151441,a:"경기 이천시 모가면 두미리 산76"},
+    {n:"블랙스톤리조트 (이천)",y:37.1614735,x:127.6179241,a:"경기 이천시 장호원읍 장여로 459-160"},
+    {n:"포천힐스CC",y:37.8832535,x:127.2443041,a:"경기 포천시 군내면 반월산성로375번길 34"},
+    {n:"힐마루 골프&리조트 (포천)",y:37.9911367,x:127.2254287,a:"경기 포천시 영중면 거사리 산109"},
+    {n:"푸른솔GC (포천)",y:37.8416698,x:127.2346433,a:"경기 포천시 가산면 금우로 276"},
+    {n:"베어크리크 (포천)",y:37.904002,x:127.280471,a:"경기 포천시 화현면 다린동로 35"},
+    {n:"선힐GC (가평)",y:37.8771921,x:127.3515465,a:"경기 가평군 조종면 운악청계로 809"},
+    {n:"가평베네스트GC",y:37.7971975,x:127.3057765,a:"경기 가평군 상면 둔덩말길 232"},
+    {n:"포천아도니스CC",y:37.9650326,x:127.1652588,a:"경기 포천시 신북면 포천로 2499"},
+    {n:"라싸골프클럽 (포천)",y:37.9975199,x:127.3805895,a:"경기 포천시 이동면 제비울2길 161"},
+    {n:"베어크리크 (춘천)",y:37.769097,x:127.7195032,a:"강원 춘천시 신동면 김유정로 730"},
+    {n:"오너스골프클럽 (춘천)",y:37.7718173,x:127.6562191,a:"강원 춘천시 남산면 동촌로 667"},
+    {n:"라데나GC (춘천)",y:37.8411301,x:127.7186555,a:"강원 춘천시 신동면 칠전동길 72"},
+    {n:"남춘천CC",y:37.7892504,x:127.690912,a:"강원 춘천시 신동면 오봉길 156"},
+    {n:"로드힐스 골프&리조트 (춘천)",y:37.7407348,x:127.7278116,a:"강원 춘천시 동산면 종자리로 136"},
+    {n:"라비에벨CC 올드 (춘천)",y:37.7413124,x:127.7569522,a:"강원 춘천시 동산면 조양리 산199"},
+    {n:"더플레이어스GC (춘천)",y:37.7775897,x:127.7507917,a:"강원 춘천시 동산면 새술막길 438"},
+    {n:"제이드팰리스GC (춘천)",y:37.8309146,x:127.548482,a:"강원 춘천시 남산면 경춘로 212-30"},
+    {n:"레이크사이드CC (용인)",y:37.3195517,x:127.179116,a:"경기 용인시 처인구 모현읍 능원로 181"},
+    {n:"한국CC (용인)",y:37.2192388,x:127.1513372,a:"경기 용인시 처인구 이동읍 기흥단지로 579"},
+    {n:"지산CC (용인)",y:37.216084,x:127.336528,a:"경기 용인시 처인구 원삼면 죽양대로2000번길 60"},
+    {n:"88CC (용인)",y:37.3027597,x:127.1667733,a:"경기 용인시 처인구 석성로521번길 169"},
+    {n:"루트52CC (여주)",y:37.3502669,x:127.7200968,a:"경기 여주시 북내면 중암1길 36"},
+    {n:"이스트밸리CC (광주)",y:37.4055238,x:127.3846454,a:"경기 광주시 곤지암읍 건업길 195"},
+    {n:"곤지암CC (광주)",y:37.3332748,x:127.2954297,a:"경기 광주시 도척면 도척윗로 280"},
+    {n:"한양CC (고양)",y:37.6561073,x:126.8555026,a:"경기 고양시"},
+    {n:"송추CC (양주)",y:37.7949486,x:126.9119494,a:"경기 양주시 광적면 비암리 산23-1"},
+    {n:"드림파크CC (인천)",y:37.5728256,x:126.6436309,a:"인천 서구 거월로 61"},
+    {n:"인천그랜드CC",y:37.5137214,x:126.6412277,a:"인천 서구 원석로 195"},
+    {n:"베어즈베스트GC (인천)",y:37.5444444,x:126.6344444,a:"인천 서구 청라대로316번길 45"},
+    {n:"인천국제CC",y:37.5618629,x:126.6535847,a:"인천 서구 봉수대로 37"},
+    {n:"김포 씨사이드CC",y:37.706053,x:126.5338708,a:"경기 김포시 월곶면 김포대로2801번길 219"},
+    {n:"세븐밸리CC (칠곡)",y:36.0170548,x:128.4645369,a:"경북 칠곡군 왜관읍 봉계3길 180"},
+    {n:"오션힐스 청도GC",y:35.6767407,x:128.812208,a:"경북 청도군 매전면 곰티로 370-204"},
+    {n:"한맥CC (예천)",y:36.6581604,x:128.5211564,a:"경북 예천군 보문면 한맥골프장길 72"},
+    {n:"노블레스CC (칠곡)",y:36.0474546,x:128.2992255,a:"경북 칠곡군 북삼읍 보손리 산34-2"},
+    {n:"감포GC (경주)",y:35.773242,x:129.4862531,a:"경북 경주시 감포읍 나정리 산47"},
+    {n:"힐스카이CC (경주)",y:35.9105988,x:129.3142853,a:"경북 경주시 천북면 화산리 산33-11"},
+    {n:"그레이스CC (청도)",y:35.6642156,x:128.6450013,a:"경북 청도군 이서면 선역길 91"},
+    {n:"경주신라CC",y:35.85084,x:129.2850197,a:"경북 경주시 신평동 산5"},
+    {n:"골프존카운티 청통 (영천)",y:35.9877158,x:128.8111278,a:"경북 영천시 청통면 청통로 733"},
+    {n:"문경GC",y:36.715215,x:128.161935,a:"경북 문경시 마성면 외어리 산1-1"},
+    {n:"힐CC (창녕)",y:35.5005738,x:128.4999053,a:"경남 창녕군 장마면 초곡리 산228"},
+    {n:"아라미르 골프리조트 (창원)",y:35.0886554,x:128.7442248,a:"경남 창원시 진해구"},
+    {n:"가야CC (김해)",y:35.273929,x:128.898378,a:"경남 김해시 삼방동 산1"},
+    {n:"골프존카운티 경남 (함안)",y:35.3088429,x:128.5740993,a:"경남 함안군 칠원읍 운곡리 산108"},
+    {n:"사우스케이프 (남해)",y:34.8374583,x:128.0717862,a:"경남 남해군 창선면 진동리 249"},
+    {n:"동훈힐마루CC (창녕)",y:35.4944787,x:128.4968256,a:"경남 창녕군 장마면 초곡리 산288"},
+    {n:"타니CC (사천)",y:35.0994819,x:128.0159733,a:"경남 사천시 곤양면 흥신로 210"},
+    {n:"동원로얄CC (통영)",y:34.8101147,x:128.4276676,a:"경남 통영시 산양읍 영운리 240"},
+    {n:"정산CC (김해)",y:35.253462,x:128.8078381,a:"경남 김해시 주촌면 서부로1637번길 299-194"},
+    {n:"노벨CC (고성)",y:35.0698317,x:128.4054959,a:"경남 고성군 회화면 회진로 567"},
+    {n:"사우스링스 영암",y:34.7356893,x:126.4283883,a:"전남 영암군 삼호읍 F1로 121-1"},
+    {n:"웨스트오션CC (영광)",y:35.355362,x:126.41153,a:"전남 영광군 백수읍 해안로 1362-70"},
+    {n:"석정힐CC (고창)",y:35.4267144,x:126.7389465,a:"전북 고창군 고창읍 석정2로 192"},
+    {n:"해남 파인비치CC",y:34.6975595,x:126.2612057,a:"전남 해남군 화원면 시아로 224"},
+    {n:"다산베아채 (강진)",y:34.5454996,x:126.758866,a:"전남 강진군 도암면 학장리 99"},
+    {n:"파인힐스 (순천)",y:35.0341366,x:127.2721794,a:"전남 순천시 주암면 송광사길 99"},
+    {n:"고창CC",y:35.515967,x:126.5023076,a:"전북 고창군 심원면 애향갯벌로 70"},
+    {n:"광주CC (곡성)",y:35.3101401,x:127.1699263,a:"전남 곡성군 옥과면 입면로 455"},
+    {n:"더나인GC (김제)",y:35.7954234,x:127.0344679,a:"전북 김제시 금구면 대화1길 8-75"},
+    {n:"에콜리안 영광CC",y:35.2948605,x:126.5013815,a:"전남 영광군 영광읍 월현로1길 40"},
+    {n:"나인브릿지 (제주)",y:33.3418079,x:126.4054915,a:"제주 서귀포시 안덕면 광평로 34-156"},
+    {n:"엘리시안 제주CC",y:33.3723833,x:126.3811418,a:"제주 제주시 애월읍 평화로 1738-116"},
+    {n:"롯데 스카이힐 제주CC",y:33.2871149,x:126.4052324,a:"제주 서귀포시 색달동 100"},
+    {n:"제주 블랙스톤CC",y:33.3364519,x:126.3110848,a:"제주 제주시 한림읍 금악리 450-1"},
+    {n:"에코랜드GC (제주)",y:33.4565209,x:126.6670479,a:"제주 제주시 조천읍 대흘리 1221-1"},
+    {n:"해비치CC (제주)",y:33.3603865,x:126.7256185,a:"제주 서귀포시 남원읍 신흥리 산30"},
+    {n:"타뮤즈 골프빌리지 (제주)",y:33.3689588,x:126.3505941,a:"제주 제주시 애월읍 봉성리 산5"},
+    {n:"테디밸리 골프&리조트 (제주)",y:33.2917697,x:126.3482597,a:"제주 서귀포시 안덕면 한창로 365"},
+    {n:"핀크스GC (제주)",y:33.3053535,x:126.3937346,a:"제주 서귀포시 안덕면 산록남로 863"}
   ];
 
-  let home = null, homeMarker = null, maxKm = 0;
+  let home = null, maxKm = 0, map, courseLayer, homeMarker;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  // 지도 초기화 (대한민국 중심)
-  const map = L.map('map').setView([36.5, 127.8], 7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '© OpenStreetMap'
-  }).addTo(map);
+  try { const saved = localStorage.getItem('golf_home'); if (saved) home = JSON.parse(saved); } catch (e) {}
+
+  // 지도 초기화
+  map = L.map('map').setView([36.5, 127.8], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+  courseLayer = L.layerGroup().addTo(map);
   setTimeout(() => map.invalidateSize(), 300);
 
-  map.on('click', e => setHome(e.latlng.lat, e.latlng.lng, false));
+  // 설정 모달
+  $('open-set').addEventListener('click', openSettings);
+  $('close-set').addEventListener('click', () => $('overlay').classList.remove('show'));
+  $('overlay').addEventListener('click', e => { if (e.target === $('overlay')) $('overlay').classList.remove('show'); });
+  function openSettings() {
+    if (home && home.addr) $('addr').value = home.addr;
+    $('overlay').classList.add('show');
+    setTimeout(() => $('addr').focus(), 100);
+  }
 
-  // 저장된 집 위치 불러오기
-  try {
-    const saved = localStorage.getItem('golf_home');
-    if (saved) { const h = JSON.parse(saved); setHome(h.lat, h.lng, true); map.setView([h.lat, h.lng], 9); }
-  } catch (e) {}
+  $('save-addr').addEventListener('click', saveAddr);
+  $('addr').addEventListener('keydown', e => { if (e.key === 'Enter') saveAddr(); });
+  async function saveAddr() {
+    const q = $('addr').value.trim();
+    if (!q) { alert('주소를 입력해 주세요.'); return; }
+    const btn = $('save-addr'); btn.textContent = '검색중';
+    try {
+      const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=kr&accept-language=ko&q=' + encodeURIComponent(q);
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      const data = await res.json();
+      if (!data.length) { alert('주소를 찾지 못했어요. 더 간단히(시/구/동)로 입력해 보세요.'); btn.textContent = '저장'; return; }
+      setHome(parseFloat(data[0].lat), parseFloat(data[0].lon), q);
+      $('overlay').classList.remove('show');
+    } catch (e) { alert('주소 검색에 실패했어요. 잠시 후 다시 시도해 주세요.'); }
+    btn.textContent = '저장';
+  }
 
-  function setHome(lat, lng, silent) {
-    home = { lat, lng };
-    if (homeMarker) homeMarker.setLatLng([lat, lng]);
-    else homeMarker = L.marker([lat, lng]).addTo(map).bindPopup('우리집');
-    document.getElementById('home-label').textContent =
-      '집 위치: ' + lat.toFixed(4) + ', ' + lng.toFixed(4);
+  $('use-gps').addEventListener('click', () => {
+    if (!navigator.geolocation) { alert('위치 기능을 사용할 수 없어요.'); return; }
+    $('use-gps').textContent = '확인중';
+    navigator.geolocation.getCurrentPosition(
+      p => { setHome(p.coords.latitude, p.coords.longitude, '현재 위치'); $('overlay').classList.remove('show'); $('use-gps').textContent = '📍 현재 위치'; },
+      () => { alert('위치를 가져오지 못했어요. 주소를 입력해 주세요.'); $('use-gps').textContent = '📍 현재 위치'; }
+    );
+  });
+
+  function setHome(lat, lng, addr) {
+    home = { lat, lng, addr };
     try { localStorage.setItem('golf_home', JSON.stringify(home)); } catch (e) {}
     render();
   }
 
-  // 현재 위치(GPS)
-  document.getElementById('gps').addEventListener('click', () => {
-    if (!navigator.geolocation) { alert('위치 기능을 사용할 수 없어요.'); return; }
-    navigator.geolocation.getCurrentPosition(
-      p => { setHome(p.coords.latitude, p.coords.longitude, false); map.setView([p.coords.latitude, p.coords.longitude], 11); },
-      () => alert('위치를 가져오지 못했어요. 지도를 직접 탭해 주세요.')
-    );
-  });
-
-  // 거리 필터
   document.querySelectorAll('.filter button').forEach(b => {
     b.addEventListener('click', () => {
       document.querySelectorAll('.filter button').forEach(x => x.classList.remove('active'));
@@ -201,7 +244,6 @@
     });
   });
 
-  // 두 좌표 사이 직선거리 (km)
   function dist(aLat, aLng, bLat, bLng) {
     const R = 6371, toR = d => d * Math.PI / 180;
     const dLat = toR(bLat - aLat), dLng = toR(bLng - aLng);
@@ -210,38 +252,84 @@
   }
 
   function naverUrl(c) {
-    return 'https://m.map.naver.com/route.nhn?menu=route'
-      + '&sname=' + encodeURIComponent('우리집') + '&sx=' + home.lng + '&sy=' + home.lat
-      + '&ename=' + encodeURIComponent(c.n) + '&ex=' + c.x + '&ey=' + c.y
-      + '&pathType=1&showMap=true';
+    return 'https://m.map.naver.com/route.nhn?menu=route&sname=' + encodeURIComponent('출발지')
+      + '&sx=' + home.lng + '&sy=' + home.lat + '&ename=' + encodeURIComponent(c.n)
+      + '&ex=' + c.x + '&ey=' + c.y + '&pathType=1&showMap=true';
+  }
+
+  // 지도에 핀 표시
+  function updateMap(items) {
+    courseLayer.clearLayers();
+    const pts = [];
+    items.forEach(c => {
+      const popup = '<b>' + esc(c.n) + '</b>'
+        + (c.d != null ? '<br>📏 ' + (c.d < 1 ? Math.round(c.d*1000)+' m' : c.d.toFixed(1)+' km') : '')
+        + '<br>' + esc(c.a)
+        + (home ? '<br><a href="' + naverUrl(c) + '" target="_blank">네이버 길찾기 →</a>' : '');
+      L.circleMarker([c.y, c.x], { radius: 6, color: '#fff', weight: 2, fillColor: '#16a34a', fillOpacity: 1 })
+        .bindPopup(popup).addTo(courseLayer);
+      pts.push([c.y, c.x]);
+    });
+    if (home) {
+      if (homeMarker) homeMarker.setLatLng([home.lat, home.lng]);
+      else homeMarker = L.circleMarker([home.lat, home.lng], { radius: 8, color: '#fff', weight: 3, fillColor: '#4f46e5', fillOpacity: 1 }).addTo(map).bindPopup('🏠 출발지');
+      pts.push([home.lat, home.lng]);
+    }
+    if (pts.length) { try { map.fitBounds(L.latLngBounds(pts).pad(0.2)); } catch (e) {} }
   }
 
   function render() {
-    const list = document.getElementById('list');
-    const count = document.getElementById('count');
+    const list = $('list'), count = $('count'), origin = $('origin');
     if (!home) {
-      list.innerHTML = '<div class="empty">먼저 지도에서 우리집 위치를 탭해 주세요 👆</div>';
-      count.textContent = '';
+      origin.style.display = 'none';
+      list.innerHTML = '<div class="empty">⚙️ 출발지 설정에서 주소를 입력하면 가까운 순으로 정렬돼요</div>';
+      count.textContent = '전국 골프장 ' + COURSES.length + '곳';
+      updateMap(COURSES);
       return;
     }
+    origin.style.display = 'block';
+    $('origin-val').textContent = home.addr || (home.lat.toFixed(4) + ', ' + home.lng.toFixed(4));
+
     let items = COURSES.map(c => ({ ...c, d: dist(home.lat, home.lng, c.y, c.x) }));
     items.sort((a, b) => a.d - b.d);
     if (maxKm > 0) items = items.filter(c => c.d <= maxKm);
 
     count.textContent = '가까운 순 · ' + items.length + '곳' + (maxKm ? ' (' + maxKm + 'km 이내)' : '');
-    if (items.length === 0) { list.innerHTML = '<div class="empty">조건에 맞는 골프장이 없어요.</div>'; return; }
+    updateMap(items);
 
+    if (!items.length) { list.innerHTML = '<div class="empty">조건에 맞는 골프장이 없어요.</div>'; return; }
     list.innerHTML = items.map(c => `
       <div class="course">
         <div class="c-left">
-          <div class="c-name">${c.n}</div>
+          <div class="c-name">${esc(c.n)}</div>
           <div class="c-dist">${c.d < 1 ? Math.round(c.d*1000)+' m' : c.d.toFixed(1)+' km'}</div>
+          <div class="c-addr">${esc(c.a)}</div>
         </div>
-        <a class="nav-btn" href="${naverUrl(c)}" target="_blank" rel="noopener">네이버 길찾기</a>
+        <div class="c-btns">
+          <a class="nav-btn" href="${naverUrl(c)}" target="_blank" rel="noopener">네이버 길찾기</a>
+          <button class="copy-btn" data-addr="${esc(c.a)}">주소 복사</button>
+        </div>
       </div>`).join('');
   }
 
+  $('list').addEventListener('click', e => {
+    const b = e.target.closest('.copy-btn');
+    if (b) copyText(b.dataset.addr, b);
+  });
+  async function copyText(text, btn) {
+    try { await navigator.clipboard.writeText(text); }
+    catch (e) {
+      const ta = document.createElement('textarea'); ta.value = text;
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (_) {}
+      document.body.removeChild(ta);
+    }
+    btn.textContent = '복사됨'; btn.classList.add('done');
+    setTimeout(() => { btn.textContent = '주소 복사'; btn.classList.remove('done'); }, 1300);
+  }
+
   render();
+  if (!home) openSettings();
 </script>
 </body>
 </html>
