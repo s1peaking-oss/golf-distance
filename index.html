@@ -8,23 +8,12 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, "Samsung Sans", "Roboto", "Segoe UI", sans-serif; background: #f4f5f7; color: #1a1a1a; }
-  #app { max-width: 480px; margin: 0 auto; padding: 14px; }
-
-  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
-  .set-btn { border: none; background: #eef2ff; color: #4f46e5; font-weight: 700; font-size: 13px; padding: 9px 13px; border-radius: 10px; cursor: pointer; }
-  .set-btn:active { background: #e0e7ff; }
-
-  .origin { background: #fff; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; border: 1px solid #eef0f2; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-size: 13.5px; }
-  .origin .lab { color: #9ca3af; font-size: 12px; margin-bottom: 3px; }
-  .origin .val { font-weight: 700; color: #111827; }
-
-  .filter { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-  .filter .lbl { font-size: 13px; color: #6b7280; margin-right: 2px; }
-  .filter button { border: 1px solid #e2e5ea; background: #fff; color: #374151; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-weight: 600; }
-  .filter button.active { background: #16a34a; color: #fff; border-color: #16a34a; }
-
-  #map { width: 100%; height: 300px; border-radius: 16px; margin-bottom: 12px; z-index: 0; background: #e7eaee; border: 1px solid #eef0f2; }
+  #app { max-width: 480px; margin: 0 auto; padding: 0; }
+  #map-wrap { position: relative; }
+  .set-btn { position: absolute; top: 10px; right: 10px; z-index: 500; border: none; background: rgba(255,255,255,0.96); color: #4f46e5; font-weight: 700; font-size: 13px; padding: 9px 14px; border-radius: 999px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .set-btn:active { background: #eef2ff; }
+  #map { width: 100%; height: 64vh; z-index: 0; background: #e7eaee; }
+  #bottom { padding: 12px 14px 22px; }
   .leaflet-popup-content { font-size: 13px; line-height: 1.5; }
   .leaflet-popup-content a { color: #03c75a; font-weight: 700; text-decoration: none; }
   .golf-pin, .home-pin { background: transparent; border: none; }
@@ -65,29 +54,15 @@
 </head>
 <body>
 <div id="app">
-  <div class="head">
-    <h1>⛳ 골프장 거리</h1>
-    <button class="set-btn" id="open-set">⚙️ 출발지 설정</button>
+  <div id="map-wrap">
+    <div id="map"></div>
+    <button class="set-btn" id="open-set">⚙️ 출발지</button>
   </div>
 
-  <div class="origin" id="origin" style="display:none;">
-    <div class="lab">출발지</div>
-    <div class="val" id="origin-val">—</div>
+  <div id="bottom">
+    <div class="count" id="count"></div>
+    <div id="list"></div>
   </div>
-
-  <div class="filter">
-    <span class="lbl">거리</span>
-    <button data-km="0" class="active">전체</button>
-    <button data-km="70">70km</button>
-    <button data-km="90">90km</button>
-    <button data-km="110">110km</button>
-    <button data-km="130">130km</button>
-  </div>
-
-  <div id="map"></div>
-
-  <div class="count" id="count"></div>
-  <div id="list"></div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -329,16 +304,13 @@
   }
 
   function render() {
-    const list = $('list'), count = $('count'), origin = $('origin');
+    const list = $('list'), count = $('count');
     if (!home) {
-      origin.style.display = 'none';
-      list.innerHTML = '<div class="empty">⚙️ 출발지 설정에서 위치를 지정하면 가까운 순으로 정렬돼요</div>';
+      list.innerHTML = '<div class="empty">⚙️ 출발지를 설정하면 가까운 순으로 정렬돼요</div>';
       count.textContent = '전국 골프장 ' + COURSES.length + '곳';
       updateMap(COURSES);
       return;
     }
-    origin.style.display = 'block';
-    $('origin-val').textContent = home.addr || (home.lat.toFixed(4) + ', ' + home.lng.toFixed(4));
 
     let items = COURSES.map(c => ({ ...c, d: dist(home.lat, home.lng, c.y, c.x) }));
     items.sort((a, b) => a.d - b.d);
